@@ -12,24 +12,29 @@ from tqdm import tqdm
 INPUT_DIR = "input_pdf"
 OUTPUT_DIR = "output_excel"
 
-# Adjust if needed
 pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-
-# Column X ranges (tuned for your PDF)
-COLUMNS = {
-    "Date": (50, 180),
-    "Journal": (180, 300),
-    "Ref": (300, 500),
-    "Description": (500, 950),
-    "Debit": (950, 1100),
-    "Credit": (1100, 1250),
-    "Balance": (1250, 1450),
-}
 
 
 def preprocess(image):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, thresh = cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)
+
+    # Remove noise
+    gray = cv2.GaussianBlur(gray, (5, 5), 0)
+
+    # Adaptive threshold (better than fixed 150)
+    thresh = cv2.adaptiveThreshold(
+        gray,
+        255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY_INV,
+        15,
+        3,
+    )
+
+    # Morphological closing to connect text
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+
     return thresh
 
 
@@ -50,22 +55,48 @@ def detect_rows(thresh):
     return rows
 
 
-def ocr_cell(cell):
-    return pytesseract.image_to_string(cell, config="--psm 6").strip()
+def ocr_cell(cell, col_name):
+    config = "--oem 3 --psm 6"
+
+    if col_name in ["Debit", "Credit", "Balance"]:
+        config += " -c tessedit_char_whitelist=0123456789.,"
+
+    if col_name == "Date":
+        config += " -c tessedit_char_whitelist=0123456789/"
+
+    return pytesseract.image_to_string(cell, config=config).strip()
+
+
+def detect_columns(thresh):
+    vertical_proj = np.sum(thresh, axis=0)
+
+    cols = []
+    start = None
+
+    for i, val in enumerate(vertical_proj):
+        if val > 0 and start is None:
+            start = i
+        elif val == 0 and start is not None:
+            if i - start > 20:  # filter noise
+                cols.append((start, i))
+            start = None
+
+    return cols
 
 
 def extract_table(image):
     thresh = preprocess(image)
     rows = detect_rows(thresh)
+    cols = detect_columns(thresh)
 
     data = []
 
     for y1, y2 in rows:
         row_dict = {}
 
-        for col, (x1, x2) in COLUMNS.items():
+        for col, (x1, x2) in enumerate(cols):
             cell = image[y1:y2, x1:x2]
-            text = ocr_cell(cell)
+            text = ocr_cell(cell, col)
             row_dict[col] = text
 
         # Skip junk rows
