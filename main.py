@@ -47,8 +47,8 @@ def auto_detect_columns():
     cols = [
         (0, 250),  # Date (starting at 0px, ending at 250px)
         (250, 400),  # Journal (starting at 250px, ending at 400px)
-        (400, 580),  # Ref (starting at 400px, ending at 700px)
-        (580, 1150),  # Description (starting at 700px, ending at 1150px)
+        (400, 570),  # Ref (starting at 400px, ending at 700px)
+        (570, 1150),  # Description (starting at 700px, ending at 1150px)
         (1150, 1350),  # Debit (starting at 1150px, ending at 1350px)
         (1350, 1480),  # Credit (starting at 1350px, ending at 1550px)
         (1480, 1800),  # Balance (starting at 1550px, ending at 1800px)
