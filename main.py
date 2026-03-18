@@ -43,7 +43,7 @@ def detect_rows(thresh, min_height=12):
     return rows
 
 
-def auto_detect_columns(image):
+def auto_detect_columns():
     cols = [
         (0, 250),  # Date (starting at 0px, ending at 250px)
         (250, 400),  # Journal (starting at 250px, ending at 400px)
@@ -83,7 +83,7 @@ def extract_table(image):
     """Extract the table from a single PDF page."""
     thresh = preprocess(image)
     rows = detect_rows(thresh)
-    cols = auto_detect_columns(image)  # Use updated column detection method
+    cols = auto_detect_columns()  # Use updated column detection method
 
     # Print the detected columns
     # print(f"Detected Columns: {cols}")  # This will print the column boundaries
