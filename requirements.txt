@@ -6,3 +6,4 @@ packaging==26.0
 pdf2image==1.17.0
 pillow==12.1.1
 pytesseract==0.3.13
+tqdm==4.67.3
