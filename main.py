@@ -86,7 +86,7 @@ def extract_table(image):
     cols = auto_detect_columns(image)  # Use updated column detection method
 
     # Print the detected columns
-    print(f"Detected Columns: {cols}")  # This will print the column boundaries
+    # print(f"Detected Columns: {cols}")  # This will print the column boundaries
 
     data = []
 
@@ -115,7 +115,7 @@ def extract_table(image):
             if header not in row_dict:
                 row_dict[header] = ""  # Add empty value for missing columns
 
-        print(f"{row_dict}")
+        # print(f"{row_dict}")
         # Clean up Date field before matching
         date_text = row_dict.get("Date", "").strip()
 
@@ -190,7 +190,7 @@ def process_pdf(pdf_path):
     return all_data
 
 
-def save_to_excel(data):
+def save_to_excel(data, pdf_name):
     """Save extracted data to Excel."""
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
@@ -205,7 +205,8 @@ def save_to_excel(data):
         for c, h in enumerate(HEADERS, 1):
             ws.cell(row=r, column=c).value = row[h]
 
-    filename = datetime.now().strftime("%Y-%m-%d_%H-%M") + ".xlsx"
+    # Save the Excel file with the name of the PDF file
+    filename = f"{os.path.splitext(pdf_name)[0]}.xlsx"  # Use the PDF name as the Excel file name
     path = os.path.join(OUTPUT_DIR, filename)
     wb.save(path)
     print(f"Saved: {path}")
@@ -235,13 +236,14 @@ def main():
         print("No PDFs found.")
         return
 
-    all_data = []
+    # all_data = []
     for pdf in tqdm(pdfs, desc="📁 PDFs", unit="file"):
         data = process_pdf(os.path.join(INPUT_DIR, pdf))
-        all_data.extend(data)
+        # all_data.extend(data)
+        save_to_excel(data, pdf)
 
-    print(f"\n✅ Total rows extracted: {len(all_data)}")
-    save_to_excel(all_data)
+    # print(f"\n✅ Total rows extracted: {len(all_data)}")
+    # save_to_excel(all_data)
 
 
 if __name__ == "__main__":
